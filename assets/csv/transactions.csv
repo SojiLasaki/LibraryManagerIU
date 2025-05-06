@@ -1,4 +1,7 @@
-To Kill a Mockingbird,Doe 555-1234,2025-05-05T19:43:26.155615,Rented
-The Da Vinci Code,Doe 555-1234,2025-05-05T20:04:36.998024,Rented
+To Kill a Mockingbird,Doe 555-1234,2025-05-05T19:43:26.155615,Returned
+The Da Vinci Code,Doe 555-1234,2025-05-05T20:04:36.998024,Returned
 1984,Doe 555-1234,2025-05-05T20:04:43.699053,Returned
-1984,John Doe,2025-05-05T22:25:59.750046,Rented
+1984,John Doe,2025-05-05T22:25:59.750046,Returned
+1984,John Doe,2025-05-06T00:11:08.559675,Returned
+To Kill a Mockingbird,John Doe,2025-05-06T00:11:22.450705,Returned
+To Kill a Mockingbird,John Doe,2025-05-06T00:15:02.272512,Returned

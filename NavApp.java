@@ -3,6 +3,8 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -171,12 +173,11 @@ public class NavApp extends JFrame {
         }
     }
 
-    // Tina Oyatobo //
     public class Transaction {
         private String bookTitle;
         private String userFullName;
         private String dateTime;
-        private String status; // "Rented" or "Returned"
+        private String status;
     
         public Transaction(String bookTitle, String userFullName, String dateTime, String status) {
             this.bookTitle = bookTitle;
@@ -201,45 +202,128 @@ public class NavApp extends JFrame {
     
     private JPanel getTransactionsPage() {
         JPanel panel = new JPanel(new BorderLayout());
-    
-        DefaultTableModel model = new DefaultTableModel(new Object[]{"Book", "User", "DateTime", "Status"}, 0);
+
+        // Table model
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"Book", "User", "DateTime", "Status", "Return"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 4;fd
+            }
+        };
+
         JTable table = new JTable(model);
         table.setRowHeight(25);
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
-    
-        // Top navigation: All, Rented, Returned, New Transaction
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
+        // Top navigation buttons
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton allBtn = new JButton("All");
         JButton rentedBtn = new JButton("Rented");
         JButton returnedBtn = new JButton("Returned");
         JButton newTransBtn = new JButton("New Transaction");
-        JButton markReturnedButton = new JButton("Mark as Returned");
-        // markReturnedButton.setVisible(false); // Initially hidden
 
-        // Add all buttons to navPanel
         navPanel.add(allBtn);
         navPanel.add(rentedBtn);
         navPanel.add(returnedBtn);
         navPanel.add(newTransBtn);
-        navPanel.add(markReturnedButton); // Add it here, not to newPanel
 
-        // Add navPanel to the top of the main panel
         panel.add(navPanel, BorderLayout.NORTH);
 
-        // Load all transactions by default
+        // Load default view
         loadTransactions(model, "All");
-    
+
+        // Event listeners
         allBtn.addActionListener(e -> loadTransactions(model, "All"));
         rentedBtn.addActionListener(e -> loadTransactions(model, "Rented"));
         returnedBtn.addActionListener(e -> loadTransactions(model, "Returned"));
-    
         newTransBtn.addActionListener(e -> openNewTransactionDialog(model));
-    
+
+        // Button renderer/editor setup
+        table.getColumn("Return").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Return").setCellEditor(new ButtonEditor(new JCheckBox(), table, model));
+
         return panel;
     }
-    
+
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+            boolean isSelected, boolean hasFocus, int row, int column) {
+            setText(value != null ? value.toString() : "");
+            return this;
+        }
+    }
+
+    class ButtonEditor extends DefaultCellEditor {
+        private JButton button;
+        private String label;
+        private boolean clicked;
+        private JTable table;
+        private DefaultTableModel model;
+
+        public ButtonEditor(JCheckBox checkBox, JTable table, DefaultTableModel model) {
+            super(checkBox);
+            this.table = table;
+            this.model = model;
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value,
+            boolean isSelected, int row, int column) {
+            label = value != null ? value.toString() : "";
+            button.setText(label);
+            clicked = true;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            if (clicked && "Return".equals(label)) {
+                int row = table.getSelectedRow();
+                model.setValueAt("Returned", row, 3); // Update status
+                model.setValueAt("", row, 4);         // Remove button
+                updateCSV(row);
+            }
+            clicked = false;
+            return label;
+        }
+
+        private void updateCSV(int row) {
+            try {
+                List<String> lines = Files.readAllLines(Paths.get("assets/csv/transactions.csv"));
+                String book = model.getValueAt(row, 0).toString();
+                String user = model.getValueAt(row, 1).toString();
+                String datetime = model.getValueAt(row, 2).toString();
+
+                for (int i = 0; i < lines.size(); i++) {
+                    String[] data = lines.get(i).split(",");
+                    if (data.length >= 4 && data[0].equals(book) && data[1].equals(user) && data[2].equals(datetime)) {
+                        lines.set(i, String.join(",", data[0], data[1], data[2], "Returned"));
+                        break;
+                    }
+                }
+                Files.write(Paths.get("assets/csv/transactions.csv"), lines);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Failed to update CSV.");
+            }
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            clicked = false;
+            return super.stopCellEditing();
+        }
+    }
+
+
     private void loadTransactions(DefaultTableModel model, String filter) {
         model.setRowCount(0); // Clear table
         File file = new File("assets/csv/transactions.csv");
@@ -250,17 +334,17 @@ public class NavApp extends JFrame {
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
                 if (data.length == 4 && (filter.equals("All") || data[3].equals(filter))) {
-                    if (filter.equals("All")) {
+                    if (data[3].equals("Rented")) {
                         model.addRow(new Object[]{data[0], data[1], data[2], data[3], "Return"});
                     } else {
-                        model.addRow(data);
+                        model.addRow(new Object[]{data[0], data[1], data[2], data[3], ""});
                     }
                 }
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading transactions.");
+            JOptionPane.showMessageDialog(null, "Error loading transactions.");
         }
-    }
+    }    
     
     // Method to get the list of rented books from the transactions CSV
     private Set<String> getRentedBooks() {
@@ -284,7 +368,7 @@ public class NavApp extends JFrame {
 
         // Attach the button editor only to "All" tab
         table.getColumn("Return").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Return").setCellEditor(new ButtonEditor(new JCheckBox(), model));
+        table.getColumn("Return").setCellEditor(new ButtonEditor(new JCheckBox(), table, model));
 
         for (String transaction : transactions) {
             String[] columns = transaction.split(",");
@@ -313,7 +397,7 @@ public class NavApp extends JFrame {
         for (String userLine : userLines) {
             String[] userData = userLine.split(",");
             if (userData.length > 2) {
-                userNames.add(userData[0] + " " + userData[1]); // first_name + last_name
+                userNames.add(userData[0] + " " + userData[1]); 
             }
         }
     
@@ -335,7 +419,6 @@ public class NavApp extends JFrame {
         panel.add(new JLabel("Status:")); panel.add(statusBox);
         panel.add(new JLabel("Action:"));
 
-        // Work on view, edit and delete transaction
         // Show dialog and process result
         if (JOptionPane.showConfirmDialog(this, panel, "New Transaction", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
             String book = (String) bookBox.getSelectedItem();
@@ -477,6 +560,7 @@ class ButtonRenderer extends JButton implements TableCellRenderer {
         return this;
     }
 }
+
 
 class ButtonEditor extends DefaultCellEditor {
     private JButton button;
