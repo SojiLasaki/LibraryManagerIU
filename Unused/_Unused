@@ -1,0 +1,380 @@
+
+// import javax.swing.*;
+// import javax.swing.table.DefaultTableModel;
+// import javax.swing.table.TableCellEditor;
+// import javax.swing.table.TableCellRenderer;
+// import java.awt.*;
+// import java.awt.event.*;
+// import java.io.*;
+
+// public class NavApp extends JFrame {
+//     JPanel mainPanel;
+//     CardLayout cardLayout;
+
+//     public NavApp() {
+//         setTitle("Toosi-e slide Library Management App");
+//         setSize(2000, 20000);
+//         setDefaultCloseOperation(EXIT_ON_CLOSE);
+//         setLocationRelativeTo(null);
+//         setLayout(new BorderLayout());
+
+//         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//         JButton libraryBtn = new JButton("Library");
+//         JButton usersBtn = new JButton("Users");
+//         JButton transactionsBtn = new JButton("Transactions");
+//         JButton logoutBtn = new JButton("Logout");
+//         navBar.add(libraryBtn);
+//         navBar.add(usersBtn);
+//         navBar.add(transactionsBtn);
+//         navBar.add(logoutBtn);
+//         add(navBar, BorderLayout.NORTH);
+
+//         cardLayout = new CardLayout();
+//         mainPanel = new JPanel(cardLayout);
+//         mainPanel.add(getLibraryPage(), "library");
+//         mainPanel.add(getUsersPage(), "users");
+//         mainPanel.add(getTransactionsPage(), "transactions");
+//         add(mainPanel, BorderLayout.CENTER);
+
+//         libraryBtn.addActionListener(e -> cardLayout.show(mainPanel, "library"));
+//         usersBtn.addActionListener(e -> cardLayout.show(mainPanel, "users"));
+//         transactionsBtn.addActionListener(e -> cardLayout.show(mainPanel, "transactions"));
+//         logoutBtn.addActionListener(e -> {
+//             JOptionPane.showMessageDialog(this, "Logout successful!");
+//             dispose();
+//             new LoginApp();
+//         });
+
+//         setVisible(true);
+//     }
+
+//     private JPanel getLibraryPage() {
+//         JPanel panel = new JPanel(new BorderLayout());
+//         JTable table = new JTable();
+//         JScrollPane scrollPane = new JScrollPane(table);
+//         panel.add(scrollPane, BorderLayout.CENTER);
+
+//         DefaultTableModel model = new DefaultTableModel(new Object[]{"ISBN", "Title", "Author", "Genre", "Action"}, 0);
+//         table.setModel(model);
+//         loadBooksFromCSV("assets/csv/books.csv", model);
+//         table.setRowHeight(25);
+
+//         table.getColumn("Action").setCellRenderer(new ActionCellRenderer());
+//         table.getColumn("Action").setCellEditor(new ActionCellEditor(table, model));
+        
+//         // make a window from here with swing
+//         JButton addBookBtn = new JButton("Add Book");
+//         addBookBtn.addActionListener(e -> addBookDialog(model));
+//         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//         topPanel.add(addBookBtn);
+//         panel.add(topPanel, BorderLayout.NORTH);
+
+//         return panel;
+//     }
+
+//     private void loadBooksFromCSV(String filePath, DefaultTableModel model) {
+//         File file = new File(filePath);
+//         if (!file.exists()) {
+//             JOptionPane.showMessageDialog(this, "books.csv not found!");
+//             return;
+//         }
+//         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+//             String line;
+//             while ((line = br.readLine()) != null) {
+//                 String[] data = line.split(",");
+//                 if (data.length >= 4) {
+//                     model.addRow(new Object[]{data[0], data[1], data[2], data[3], "View | Edit | Delete"});
+//                 }
+//             }
+//         } catch (IOException e) {
+//             JOptionPane.showMessageDialog(this, "Error reading CSV.");
+//             e.printStackTrace();
+//         }
+//     }
+
+//     private void addBookDialog(DefaultTableModel model) {
+//         JTextField isbnField = new JTextField(15);
+//         JTextField titleField = new JTextField(15);
+//         JTextField authorField = new JTextField(15);
+//         JTextField genreField = new JTextField(15);
+
+//         JPanel panel = new JPanel();
+//         panel.add(new JLabel("ISBN:")); panel.add(isbnField);
+//         panel.add(new JLabel("Title:")); panel.add(titleField);
+//         panel.add(new JLabel("Author:")); panel.add(authorField);
+//         panel.add(new JLabel("Genre:")); panel.add(genreField);
+
+//         int option = JOptionPane.showConfirmDialog(this, panel, "Add New Book", JOptionPane.OK_CANCEL_OPTION);
+//         if (option == JOptionPane.OK_OPTION) {
+//             String isbn = isbnField.getText();
+//             String title = titleField.getText();
+//             String author = authorField.getText();
+//             String genre = genreField.getText();
+
+//             if (!isbn.isEmpty() && !title.isEmpty() && !author.isEmpty() && !genre.isEmpty()) {
+//                 model.addRow(new Object[]{isbn, title, author, genre, "View | Edit | Delete"});
+//                 saveBookToCSV("assets/csv/books.csv", isbn, title, author, genre);
+//             } else {
+//                 JOptionPane.showMessageDialog(this, "All fields must be filled.");
+//             }
+//         }
+//     }
+
+//     private void saveBookToCSV(String filePath, String isbn, String title, String author, String genre) {
+//         try (FileWriter writer = new FileWriter(filePath, true)) {
+//             writer.append(isbn).append(",").append(title).append(",").append(author).append(",").append(genre).append("\n");
+//         } catch (IOException e) {
+//             JOptionPane.showMessageDialog(this, "Error saving book to CSV.");
+//             e.printStackTrace();
+//         }
+//     }
+
+//     private JPanel getUsersPage() {
+//         JPanel panel = new JPanel(new BorderLayout());
+//         JTable table = new JTable();
+//         JScrollPane scrollPane = new JScrollPane(table);
+//         panel.add(scrollPane, BorderLayout.CENTER);
+
+//         DefaultTableModel model = new DefaultTableModel(new Object[]{"First Name", "Last Name", "Phone", "Email", "Address", "Action"}, 0);
+//         table.setModel(model);
+
+//         File file = new File("assets/csv/users.csv");
+//         table.setRowHeight(25);
+
+//         if (!file.exists()) {
+//             JOptionPane.showMessageDialog(this, "users.csv not found!");
+//         } else {
+//             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+//                 String line;
+//                 while ((line = br.readLine()) != null) {
+//                     String[] data = line.split(",");
+//                     if (data.length >= 5) {
+//                         model.addRow(new Object[]{data[0], data[1], data[2], data[3], data[4], "View | Edit | Delete"});
+//                     }
+//                 }
+//             } catch (IOException e) {
+//                 JOptionPane.showMessageDialog(this, "Error reading CSV.");
+//                 e.printStackTrace();
+//             }
+//         }
+
+//         JButton createUserBtn = new JButton("Create User");
+//         createUserBtn.addActionListener(e -> createUserDialog(model));
+//         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//         topPanel.add(createUserBtn);
+//         panel.add(topPanel, BorderLayout.NORTH);
+
+//         return panel;
+//     }
+
+//     private void createUserDialog(DefaultTableModel model) {
+//         JTextField firstNameField = new JTextField(15);
+//         JTextField lastNameField = new JTextField(15);
+//         JTextField phoneField = new JTextField(15);
+//         JTextField emailField = new JTextField(15);
+//         JTextField addressField = new JTextField(15);
+
+//         JPanel panel = new JPanel();
+//         panel.add(new JLabel("First Name:")); panel.add(firstNameField);
+//         panel.add(new JLabel("Last Name:")); panel.add(lastNameField);
+//         panel.add(new JLabel("Phone:")); panel.add(phoneField);
+//         panel.add(new JLabel("Email:")); panel.add(emailField);
+//         panel.add(new JLabel("Address:")); panel.add(addressField);
+
+//         int option = JOptionPane.showConfirmDialog(this, panel, "Create New User", JOptionPane.OK_CANCEL_OPTION);
+//         if (option == JOptionPane.OK_OPTION) {
+//             String firstName = firstNameField.getText();
+//             String lastName = lastNameField.getText();
+//             String phone = phoneField.getText();
+//             String email = emailField.getText();
+//             String address = addressField.getText();
+
+//             if (!firstName.isEmpty() && !lastName.isEmpty() && !phone.isEmpty() && !email.isEmpty() && !address.isEmpty()) {
+//                 model.addRow(new Object[]{firstName, lastName, phone, email, address, "View | Edit | Delete"});
+//                 saveUserToCSV("assets/csv/users.csv", firstName, lastName, phone, email, address);
+//             } else {
+//                 JOptionPane.showMessageDialog(this, "All fields must be filled.");
+//             }
+//         }
+//     }
+
+//     private void saveUserToCSV(String filePath, String firstName, String lastName, String phone, String email, String address) {
+//         try (FileWriter writer = new FileWriter(filePath, true)) {
+//             writer.append(firstName).append(",").append(lastName).append(",").append(phone).append(",").append(email).append(",").append(address).append("\n");
+//         } catch (IOException e) {
+//             JOptionPane.showMessageDialog(this, "Error saving user to CSV.");
+//             e.printStackTrace();
+//         }
+//     }
+
+//     private JPanel getTransactionsPage() {
+//         JPanel panel = new JPanel();
+//         panel.add(new JLabel("Transaction Page Coming Soon..."));
+//         return panel;
+//     }
+
+//     public static void main(String[] args) {
+//         SwingUtilities.invokeLater(LoginApp::new);
+//     }
+
+//     class ButtonRenderer extends JButton implements TableCellRenderer {
+//         public ButtonRenderer() {
+//             setText("View | Edit | Delete");
+//         }
+
+//         @Override
+//         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+//             return this;
+//         }
+//     }
+
+//     class ButtonEditor extends DefaultCellEditor {
+//         private JButton button;
+//         private boolean clicked;
+//         // private DefaultTableModel model;
+
+//         public ButtonEditor(JCheckBox checkBox, DefaultTableModel model) {
+//             super(checkBox);
+//             // this.model = model;
+//             button = new JButton("Action");
+//             button.setOpaque(true);
+//             button.addActionListener(e -> {
+//                 if (clicked) {
+//                     JTable table = (JTable) button.getParent().getParent();
+//                     int row = table.getSelectedRow();
+//                     int confirm = JOptionPane.showConfirmDialog(null, "Delete this row?", "Confirm", JOptionPane.YES_NO_OPTION);
+//                     if (confirm == JOptionPane.YES_OPTION) {
+//                         model.removeRow(row);
+//                     }
+//                 }
+//                 clicked = false;
+//             });
+//         }
+
+//         @Override
+//         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+//             clicked = true;
+//             return button;
+//         }
+
+//         @Override
+//         public Object getCellEditorValue() {
+//             return "Action";
+//         }
+
+//         @Override
+//         public boolean stopCellEditing() {
+//             clicked = false;
+//             return super.stopCellEditing();
+//         }
+//     }
+// }
+
+
+// class ActionCellRenderer extends JPanel implements TableCellRenderer {
+//     public ActionCellRenderer() {
+//         setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
+//         add(new JButton("View"));
+//         add(new JButton("Edit"));
+//         add(new JButton("Delete"));
+//     }
+
+//     @Override
+//     public Component getTableCellRendererComponent(JTable table, Object value,
+//         boolean isSelected, boolean hasFocus,
+//         int row, int column) {
+//         return this;
+//     }
+// }
+// class ActionCellEditor extends AbstractCellEditor implements TableCellEditor {
+//     private JPanel panel;
+//     // private JTable table;
+//     private DefaultTableModel model;
+
+//     public ActionCellEditor(JTable table, DefaultTableModel model) {
+//         // this.table = table;
+//         this.model = model;
+
+//         panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+//         JButton viewBtn = new JButton("View");
+//         JButton editBtn = new JButton("Edit");
+//         JButton deleteBtn = new JButton("Delete");
+
+//         viewBtn.addActionListener(e -> {
+//             int row = table.getEditingRow();
+//             if (row >= 0) {
+//                 showBookDialog("View Book", row, false);
+//             }
+//         });
+
+//         editBtn.addActionListener(e -> {
+//             int row = table.getEditingRow();
+//             if (row >= 0) {
+//                 showBookDialog("Edit Book", row, true);
+//             }
+//         });
+
+//         deleteBtn.addActionListener(e -> {
+//             int row = table.getEditingRow();
+//             if (row >= 0) {
+//                 int confirm = JOptionPane.showConfirmDialog(
+//                     table, "Are you sure you want to delete this book?",
+//                     "Delete Confirmation", JOptionPane.OK_CANCEL_OPTION);
+//                 if (confirm == JOptionPane.OK_OPTION) {
+//                     model.removeRow(row);
+//                 }
+//             }
+//         });
+
+//         panel.add(viewBtn);
+//         panel.add(editBtn);
+//         panel.add(deleteBtn);
+//     }
+
+//     @Override
+//     public Component getTableCellEditorComponent(JTable table, Object value,
+//         boolean isSelected, int row, int column) {
+//         return panel;
+//     }
+
+//     @Override
+//     public Object getCellEditorValue() {
+//         return null;
+//     }
+
+//     private void showBookDialog(String title, int row, boolean editable) {
+//         String isbn = model.getValueAt(row, 0).toString();
+//         String bookTitle = model.getValueAt(row, 1).toString();
+//         String author = model.getValueAt(row, 2).toString();
+//         String genre = model.getValueAt(row, 3).toString();
+
+//         JTextField isbnField = new JTextField(isbn);
+//         JTextField titleField = new JTextField(bookTitle);
+//         JTextField authorField = new JTextField(author);
+//         JTextField genreField = new JTextField(genre);
+
+//         isbnField.setEditable(editable);
+//         titleField.setEditable(editable);
+//         authorField.setEditable(editable);
+//         genreField.setEditable(editable);
+
+//         JPanel panel = new JPanel(new GridLayout(0, 2));
+//         panel.add(new JLabel("ISBN:")); panel.add(isbnField);
+//         panel.add(new JLabel("Title:")); panel.add(titleField);
+//         panel.add(new JLabel("Author:")); panel.add(authorField);
+//         panel.add(new JLabel("Genre:")); panel.add(genreField);
+
+//         if (editable) {
+//             int result = JOptionPane.showConfirmDialog(null, panel, title,
+//                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+//             if (result == JOptionPane.OK_OPTION) {
+//                 model.setValueAt(isbnField.getText(), row, 0);
+//                 model.setValueAt(titleField.getText(), row, 1);
+//                 model.setValueAt(authorField.getText(), row, 2);
+//                 model.setValueAt(genreField.getText(), row, 3);
+//             }
+//         } else {
+//             JOptionPane.showMessageDialog(null, panel, title, JOptionPane.PLAIN_MESSAGE);
+//         }
+//     }
+// }
