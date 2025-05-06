@@ -25,6 +25,26 @@ public class LoginApp extends JFrame implements ActionListener {
         JLabel passLabel = new JLabel("Password:");
         passField = new JPasswordField(15);
 
+        // Create a background frame (fullscreen, behind login)
+        JFrame bgFrame = new JFrame();
+        bgFrame.setUndecorated(true); // No title bar
+        bgFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Full screen
+
+        // Load and scale image to fit screen size
+        ImageIcon bgIcon = new ImageIcon("assets/IMG_8529.png");
+        Image bgImage = bgIcon.getImage().getScaledInstance(
+            Toolkit.getDefaultToolkit().getScreenSize().width,
+            Toolkit.getDefaultToolkit().getScreenSize().height,
+            Image.SCALE_SMOOTH
+        );
+
+        JLabel bgLabel = new JLabel(new ImageIcon(bgImage));
+        bgFrame.setContentPane(bgLabel);
+
+        bgFrame.setVisible(true); // Show background first
+
+                
+
         loginButton = new JButton("Login");
         // loginButton.addActionListener(this);
         loginButton.addActionListener(this);
