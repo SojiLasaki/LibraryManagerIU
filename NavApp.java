@@ -207,7 +207,7 @@ public class NavApp extends JFrame {
         DefaultTableModel model = new DefaultTableModel(new Object[]{"Book", "User", "DateTime", "Status", "Return"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4;fd
+                return column == 4;
             }
         };
 
